@@ -6,6 +6,13 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>Simon Jefferies</Authors>
+		<Company>Simon Jefferies</Company>
+		<Description>Fluent extensions for Microsoft.Extensions.Logging that capture caller file, member, and line information.</Description>
+		<PackageTags>logging;fluent;caller-info;source-context;extensions;Microsoft.Extensions.Logging</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<ItemGroup>

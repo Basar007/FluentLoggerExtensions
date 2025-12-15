@@ -6,44 +6,54 @@ on:
   pull_request:
     branches: [ "main", "develop" ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
-
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          filter: tree:0
+          persist-credentials: true
 
-      - name: Get tags
-        run: git fetch --tags origin
-  
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore
+
+      - name: Build (no package)
+        run: dotnet build -c Release --no-restore /p:GeneratePackageOnBuild=false
+
+      - name: Test
+        run: dotnet test -c Release --no-build
 
       - name: Bump & push tag
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: mathieudutour/github-tag-action@v6.2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           tag_prefix: ""
 
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-  
-      - name: Test
-        run: dotnet test --configuration Release --no-build
+      - name: Fetch tags
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: git fetch --tags --force
 
-      - name: Publish Nuget
-        shell: pwsh
-        run: |
-          dotnet nuget push '**/*.nupkg' -k $env:NUGET -s https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+      - name: Build (package with new tag)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: dotnet build -c Release --no-restore /p:GeneratePackageOnBuild=true
+
+      - name: Publish NuGet
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: dotnet nuget push '**/*.nupkg' \
+              -k $NUGET \
+              -s https://api.nuget.org/v3/index.json \
+              --skip-duplicate \
+              --no-symbols
         env:
           NUGET: ${{ secrets.NUGET }}
